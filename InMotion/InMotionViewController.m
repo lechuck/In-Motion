@@ -10,6 +10,47 @@
 
 @implementation InMotionViewController
 
+@synthesize accelerometerStatus, gpsStatus;
+@synthesize accelX, accelY, accelZ;
+
+- (void)accelerometer:(UIAccelerometer *)accelerometer
+        didAccelerate:(UIAcceleration *)acceleration{
+
+    double const kThreshold = 2.0;
+    if (   fabsf(acceleration.x) > kThreshold
+        || fabsf(acceleration.y) > kThreshold
+        || fabsf(acceleration.z) > kThreshold) {
+        NSLog(@"Hey, stop shaking me!");
+    }
+    
+
+    NSString *stringAccelX = [NSString stringWithFormat:@"%f", fabsf(acceleration.x)];
+    [accelX setText:stringAccelX];
+    NSString *stringAccelY = [NSString stringWithFormat:@"%f", fabsf(acceleration.y)];
+    [accelY setText:stringAccelY];
+    NSString *stringAccelZ = [NSString stringWithFormat:@"%f", fabsf(acceleration.z)];
+    [accelZ setText:stringAccelZ];
+
+
+}
+
+- (void)startAccelerometer {
+    NSLog(@"accelerometer started!");
+    UIAccelerometer *accelerometer = [UIAccelerometer sharedAccelerometer];
+    accelerometer.delegate = self;
+    accelerometer.updateInterval = 0.25;
+}
+
+- (void)stopAccelerometer {
+    
+    UIAccelerometer *accelerometer = [UIAccelerometer sharedAccelerometer];
+    accelerometer.delegate = nil;
+    NSLog(@"accelerometer stopped!");
+    
+}
+
+
+
 - (void)didReceiveMemoryWarning
 {
     // Releases the view if it doesn't have a superview.
@@ -27,6 +68,17 @@
     [super viewDidLoad];
 }
 */
+- (void)viewDidAppear:(BOOL)animated {
+
+    
+    [gpsStatus setOn:FALSE];
+    [accelerometerStatus setOn:FALSE];
+    [gpsStatus setEnabled:FALSE];
+}
+
+- (void)viewWillDisappear:(BOOL)animated {
+    [self stopAccelerometer];
+}
 
 - (void)viewDidUnload
 {
@@ -40,5 +92,26 @@
     // Return YES for supported orientations
     return (interfaceOrientation == UIInterfaceOrientationPortrait);
 }
+
+- (IBAction)statusAccelerometer:(id)sender{
+
+    if([accelerometerStatus isOn]){
+        NSLog(@"enabled!");
+        [self startAccelerometer];
+    }
+    
+    else{
+        NSLog(@"disabled!");
+        [self stopAccelerometer];
+        [accelX setText:@"OFF"];
+        [accelY setText:@"OFF"];
+        [accelZ setText:@"OFF"];
+
+    }
+    
+    
+}
+
+
 
 @end
