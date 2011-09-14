@@ -17,6 +17,9 @@
     IBOutlet UILabel *accelY;
     IBOutlet UILabel *accelZ;
     
+    IBOutlet UILabel *sum;
+    IBOutlet UILabel *max;
+    
 
 }
 
@@ -27,6 +30,8 @@
 @property (nonatomic, retain) IBOutlet UILabel *accelX;
 @property (nonatomic, retain) IBOutlet UILabel *accelY;
 @property (nonatomic, retain) IBOutlet UILabel *accelZ;
+@property (nonatomic, retain) IBOutlet UILabel *sum;
+@property (nonatomic, retain) IBOutlet UILabel *max;
 
 
 - (IBAction)statusAccelerometer:(id)sender;

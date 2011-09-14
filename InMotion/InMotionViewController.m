@@ -11,11 +11,14 @@
 @implementation InMotionViewController
 
 @synthesize accelerometerStatus, gpsStatus;
-@synthesize accelX, accelY, accelZ;
+@synthesize accelX, accelY, accelZ, sum, max;
+
+    double maximo = 0.0;
 
 - (void)accelerometer:(UIAccelerometer *)accelerometer
         didAccelerate:(UIAcceleration *)acceleration{
 
+    
     double const kThreshold = 2.0;
     if (   fabsf(acceleration.x) > kThreshold
         || fabsf(acceleration.y) > kThreshold
@@ -30,6 +33,15 @@
     [accelY setText:stringAccelY];
     NSString *stringAccelZ = [NSString stringWithFormat:@"%f", fabsf(acceleration.z)];
     [accelZ setText:stringAccelZ];
+    
+    double sumatorio= fabsf(acceleration.x)+fabsf(acceleration.y)+fabsf(acceleration.z);
+    
+    NSString *suma = [NSString stringWithFormat:@"%f",sumatorio ];
+    [sum setText:suma];
+
+    if(sumatorio>maximo)
+        maximo=sumatorio;
+    
 
 
 }
@@ -74,6 +86,7 @@
     [gpsStatus setOn:FALSE];
     [accelerometerStatus setOn:FALSE];
     [gpsStatus setEnabled:FALSE];
+    
 }
 
 - (void)viewWillDisappear:(BOOL)animated {
@@ -106,6 +119,8 @@
         [accelX setText:@"OFF"];
         [accelY setText:@"OFF"];
         [accelZ setText:@"OFF"];
+        NSString *stringmax = [NSString stringWithFormat:@"%f",maximo ];
+        [max setText:stringmax];
 
     }
     
