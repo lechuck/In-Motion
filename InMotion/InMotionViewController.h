@@ -7,6 +7,7 @@
 //
 
 #import <UIKit/UIKit.h>
+#import <sqlite3.h>
 
 @interface InMotionViewController : UIViewController <UIAccelerometerDelegate>{
 
@@ -19,6 +20,8 @@
     
     IBOutlet UILabel *sum;
     IBOutlet UILabel *max;
+
+    sqlite3 *database;
     
 
 }
@@ -32,6 +35,7 @@
 @property (nonatomic, retain) IBOutlet UILabel *accelZ;
 @property (nonatomic, retain) IBOutlet UILabel *sum;
 @property (nonatomic, retain) IBOutlet UILabel *max;
+
 
 
 - (IBAction)statusAccelerometer:(id)sender;
