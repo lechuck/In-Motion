@@ -12,6 +12,7 @@
 
 @synthesize accelerometerStatus, gpsStatus;
 @synthesize accelX, accelY, accelZ, sum, max;
+@synthesize CLController;
 
 NSDateFormatter *formatter;
 NSString        *dateString;
@@ -85,8 +86,6 @@ NSInteger *resultado;
     
     }
     
-    
-    
 }
 
 - (void)startAccelerometer {
@@ -104,6 +103,13 @@ NSInteger *resultado;
     
 }
 
+- (void)locationUpdate:(CLLocation *)location {
+	locLabel.text = [location description];
+}
+
+- (void)locationError:(NSError *)error {
+	locLabel.text = [error description];
+}
 
 
 - (void)didReceiveMemoryWarning
@@ -120,6 +126,13 @@ NSInteger *resultado;
 // Implement viewDidLoad to do additional setup after loading the view, typically from a nib.
 - (void)viewDidLoad
 {
+    [super viewDidLoad];
+    
+    // Location controller
+	CLController = [[CoreLocationController alloc] init];
+	CLController.delegate = self;
+	[CLController.locMgr startUpdatingLocation];
+    
     NSString *docsDir;
     NSArray *dirPaths;
     
@@ -228,6 +241,10 @@ NSInteger *resultado;
     
 }
 
+- (void)dealloc {
+	[CLController release];
+    [super dealloc];
+}
 
 
 @end

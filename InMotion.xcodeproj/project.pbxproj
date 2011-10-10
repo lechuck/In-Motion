@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		083BE559142922F600CE6C19 /* accelData.sqlite in Resources */ = {isa = PBXBuildFile; fileRef = 083BE558142922F600CE6C19 /* accelData.sqlite */; };
 		083BE55C1429233F00CE6C19 /* libsqlite3.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 083BE55B1429233F00CE6C19 /* libsqlite3.0.dylib */; };
+		9EE1D1F8144398370090C5C9 /* CoreLocation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9EE1D1F7144398370090C5C9 /* CoreLocation.framework */; };
+		9EE1D1FB144398780090C5C9 /* CoreLocationController.m in Sources */ = {isa = PBXBuildFile; fileRef = 9EE1D1FA144398780090C5C9 /* CoreLocationController.m */; };
 		9EEC75731420DECE005A7E22 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9EEC75721420DECE005A7E22 /* UIKit.framework */; };
 		9EEC75751420DECE005A7E22 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9EEC75741420DECE005A7E22 /* Foundation.framework */; };
 		9EEC75771420DECE005A7E22 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9EEC75761420DECE005A7E22 /* CoreGraphics.framework */; };
@@ -24,6 +26,9 @@
 		083BE558142922F600CE6C19 /* accelData.sqlite */ = {isa = PBXFileReference; lastKnownFileType = file; path = accelData.sqlite; sourceTree = "<group>"; };
 		083BE55B1429233F00CE6C19 /* libsqlite3.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsqlite3.0.dylib; path = usr/lib/libsqlite3.0.dylib; sourceTree = SDKROOT; };
 		086BC530142569310066401A /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
+		9EE1D1F7144398370090C5C9 /* CoreLocation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreLocation.framework; path = System/Library/Frameworks/CoreLocation.framework; sourceTree = SDKROOT; };
+		9EE1D1F9144398780090C5C9 /* CoreLocationController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CoreLocationController.h; sourceTree = "<group>"; };
+		9EE1D1FA144398780090C5C9 /* CoreLocationController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CoreLocationController.m; sourceTree = "<group>"; };
 		9EEC756E1420DECE005A7E22 /* InMotion.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = InMotion.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		9EEC75721420DECE005A7E22 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		9EEC75741420DECE005A7E22 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -45,6 +50,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9EE1D1F8144398370090C5C9 /* CoreLocation.framework in Frameworks */,
 				083BE55C1429233F00CE6C19 /* libsqlite3.0.dylib in Frameworks */,
 				9EEC75731420DECE005A7E22 /* UIKit.framework in Frameworks */,
 				9EEC75751420DECE005A7E22 /* Foundation.framework in Frameworks */,
@@ -58,6 +64,7 @@
 		9EEC75631420DECD005A7E22 = {
 			isa = PBXGroup;
 			children = (
+				9EE1D1F7144398370090C5C9 /* CoreLocation.framework */,
 				083BE55B1429233F00CE6C19 /* libsqlite3.0.dylib */,
 				083BE558142922F600CE6C19 /* accelData.sqlite */,
 				086BC530142569310066401A /* StoreKit.framework */,
@@ -95,6 +102,8 @@
 				9EEC75881420DECE005A7E22 /* InMotionViewController.m */,
 				9EEC758A1420DECE005A7E22 /* InMotionViewController.xib */,
 				9EEC75791420DECE005A7E22 /* Supporting Files */,
+				9EE1D1F9144398780090C5C9 /* CoreLocationController.h */,
+				9EE1D1FA144398780090C5C9 /* CoreLocationController.m */,
 			);
 			path = InMotion;
 			sourceTree = "<group>";
@@ -177,6 +186,7 @@
 				9EEC757F1420DECE005A7E22 /* main.m in Sources */,
 				9EEC75831420DECE005A7E22 /* InMotionAppDelegate.m in Sources */,
 				9EEC75891420DECE005A7E22 /* InMotionViewController.m in Sources */,
+				9EE1D1FB144398780090C5C9 /* CoreLocationController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
