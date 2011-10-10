@@ -1,0 +1,10 @@
+# OS generated files #
+######################
+.DS_Store?
+ehthumbs.db
+Icon?
+Thumbs.db
+
+# User Data
+# InMotion.xcodeproj/project.xcworkspace/xcuserdata/tonykarppinen.xcuserdatad/
+# InMotion.xcodeproj/xcuserdata/tonykarppinen.xcuserdatad/

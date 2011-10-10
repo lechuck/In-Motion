@@ -135,6 +135,9 @@
 /* Begin PBXProject section */
 		9EEC75651420DECE005A7E22 /* Project object */ = {
 			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0420;
+			};
 			buildConfigurationList = 9EEC75681420DECE005A7E22 /* Build configuration list for PBXProject "InMotion" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;

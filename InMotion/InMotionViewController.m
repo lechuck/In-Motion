@@ -53,7 +53,7 @@ NSInteger *resultado;
     sqlite3_stmt *statement;
     const char *dbpath = [databasePath UTF8String];
 
-    NSLog(databasePath);
+    NSLog(@"%@", databasePath);
     /*
     formatter = [[NSDateFormatter alloc] init];
     [formatter setDateFormat:@"HH:mm:ss"];
