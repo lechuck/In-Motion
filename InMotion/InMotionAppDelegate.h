@@ -12,11 +12,14 @@
 
 @interface InMotionAppDelegate : NSObject <UIApplicationDelegate>{
 
+    
 
 }
 
 @property (nonatomic, retain) IBOutlet UIWindow *window;
 
-@property (nonatomic, retain) IBOutlet InMotionViewController *viewController;
+
+@property (nonatomic, retain) IBOutlet UINavigationController *navigationController;
+
 
 @end

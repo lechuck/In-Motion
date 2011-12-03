@@ -8,40 +8,36 @@
 
 #import <UIKit/UIKit.h>
 #import <sqlite3.h>
+#import "CalibrationViewController.h"
 #import "CoreLocationController.h"
+
 
 @interface InMotionViewController : UIViewController <UIAccelerometerDelegate>{
 
-	CoreLocationController *CLController;
-	IBOutlet UILabel *locLabel;    
-    
     IBOutlet UISwitch *accelerometerStatus;
-    IBOutlet UISwitch *gpsStatus;
 
-    IBOutlet UILabel *accelX;
-    IBOutlet UILabel *accelY;
-    IBOutlet UILabel *accelZ;
+    IBOutlet UILabel *status;
     
-    IBOutlet UILabel *sum;
-    IBOutlet UILabel *max;
+    IBOutlet UIButton *calibrate;
 
-    sqlite3 *database;
+
     
+
 }
 
-@property (nonatomic, retain) CoreLocationController *CLController;
+
 @property (nonatomic, retain) IBOutlet UISwitch *accelerometerStatus;
-@property (nonatomic, retain) IBOutlet UISwitch *gpsStatus;
+@property (nonatomic, retain) IBOutlet UILabel *status;
 
-@property (nonatomic, retain) IBOutlet UILabel *accelX;
-@property (nonatomic, retain) IBOutlet UILabel *accelY;
-@property (nonatomic, retain) IBOutlet UILabel *accelZ;
-@property (nonatomic, retain) IBOutlet UILabel *sum;
-@property (nonatomic, retain) IBOutlet UILabel *max;
+// Location stuff
+@property (nonatomic, retain) CoreLocationController *CLController;
 
 
+- (IBAction)doCalibrate:(id)sender;
 
 - (IBAction)statusAccelerometer:(id)sender;
+
+-(void)writeBD;
 
 
 @end

@@ -24,10 +24,13 @@
 }
 
 - (void)locationManager:(CLLocationManager *)manager didUpdateToLocation:(CLLocation *)newLocation fromLocation:(CLLocation *)oldLocation {
+    //NSLog(@"didUpdateToLocation...");    
     [self.delegate locationUpdate:newLocation];
 }
 
 - (void)locationManager:(CLLocationManager *)manager didFailWithError:(NSError *)error {
+    NSString* errorMessage = [NSString stringWithFormat:@"Location manager error: %@", [error description]];
+    NSLog(@"%@", errorMessage);
     [self.delegate locationError:error];
 }
 
