@@ -46,10 +46,7 @@ float const         kCarMaxThreshold = 130;
 
 NSArray             *stopKeys;
 
-
-
 sqlite3 *database;
-
 
 NSDateFormatter *formatter;
 NSString        *dateString;
@@ -64,7 +61,6 @@ double avg1,avg2,summation;
 int counter=0;
 int current_vector=1;
 bool first_time=true;
-
 
 double calibratedAvgs[6], calibratedDeviations[6];
 /*
@@ -149,8 +145,7 @@ double limitWalkRun=1.3;
         
         const char *query_stmt = [querySQL UTF8String];
         
-        sqlite3_prepare_v2(database, query_stmt, -1, &statement, NULL);
-        
+        sqlite3_prepare_v2(database, query_stmt, -1, &statement, NULL);        
         
         if (sqlite3_step(statement) == SQLITE_DONE){
             NSLog(@"Data added");
@@ -159,12 +154,8 @@ double limitWalkRun=1.3;
             NSLog(@"Fail to add data");
         }
         sqlite3_finalize(statement);
-        sqlite3_close(database);
-        
-        
+        sqlite3_close(database);                
     }
-
-    
 }
 
 
@@ -188,67 +179,48 @@ double limitWalkRun=1.3;
                 summation += v1[i];
             }
             avg1 = summation/VECTOR_SIZE;
-            
-            
-        }
-    }else{
-    
-    if(current_vector==1){
-        v1[counter]=sqrt(pow(acceleration.x, 2)+pow(acceleration.y, 2)+pow(acceleration.z, 2));
-        counter++;
-        
-        if(counter==VECTOR_SIZE){
-            counter=0;
-            current_vector=2;
-            
-            summation = 0.0;
-            for (int i=0; i<VECTOR_SIZE; i++) {
-                summation += v1[i];
-            }
-            avg1 = summation/VECTOR_SIZE;
-            
-            NSLog(@"writing");
-            self.writeBD;
-        
         }
     }
-    else{
-        
-        v2[counter]=sqrt(pow(acceleration.x, 2)+pow(acceleration.y, 2)+pow(acceleration.z, 2));
-        counter++;
-        
-        if(counter==VECTOR_SIZE){
-            counter=0;
-            current_vector=1;
+    else {
+        if(current_vector==1){
+            v1[counter]=sqrt(pow(acceleration.x, 2)+pow(acceleration.y, 2)+pow(acceleration.z, 2));
+            counter++;
             
-            summation = 0.0;
-            for (int i=0; i<VECTOR_SIZE; i++) {
-                summation += v2[i];
+            if(counter==VECTOR_SIZE){
+                counter=0;
+                current_vector=2;
+                
+                summation = 0.0;
+                for (int i=0; i<VECTOR_SIZE; i++) {
+                    summation += v1[i];
+                }
+                avg1 = summation/VECTOR_SIZE;
+                
+                NSLog(@"writing");
+                self.writeBD;
+            
             }
-            avg2 = summation/VECTOR_SIZE;
-            
-            NSLog(@"writing");
-            self.writeBD;
-            
         }
-    
-    }
-    
-    
-    
-    
-    
-    //if (condicion para caminar == true)
-    //evento=caminar;
-    
-    
-    
+        else{
+            v2[counter]=sqrt(pow(acceleration.x, 2)+pow(acceleration.y, 2)+pow(acceleration.z, 2));
+            counter++;
+            
+            if(counter==VECTOR_SIZE){
+                counter=0;
+                current_vector=1;
+                
+                summation = 0.0;
+                for (int i=0; i<VECTOR_SIZE; i++) {
+                    summation += v2[i];
+                }
+                avg2 = summation/VECTOR_SIZE;
+                
+                NSLog(@"writing");
+                self.writeBD;            
+            }
+        }
 
     }
-    
-    
-    
-    
 }
 
 - (void)startAccelerometer {
@@ -258,15 +230,12 @@ double limitWalkRun=1.3;
     accelerometer.updateInterval = 0.25;
 }
 
-- (void)stopAccelerometer {
-    
+- (void)stopAccelerometer {    
     UIAccelerometer *accelerometer = [UIAccelerometer sharedAccelerometer];
     accelerometer.delegate = nil;
     NSLog(@"accelerometer stopped!");
     
 }
-
-
 
 - (void)didReceiveMemoryWarning
 {
@@ -314,22 +283,12 @@ double limitWalkRun=1.3;
         
         [self updateReittiopasData:stops];        
     }
-    
-    
-    
-    
-    
-    
-
 }
 
 - (void)viewWillAppear:(BOOL)animated {
-
-    
     NSLog(@"view will appear");
     
     [accelerometerStatus setOn:FALSE];
-    
     
     NSString *docsDir;
     NSArray *dirPaths;
@@ -344,26 +303,18 @@ double limitWalkRun=1.3;
     
     NSFileManager *filemgr = [NSFileManager defaultManager];
     
-    
     if ([filemgr fileExistsAtPath: databasePath ] != NO)
     {
-        
-        
         NSLog(@"Hola!");
 
 		const char *dbpath = [databasePath UTF8String];
         if (sqlite3_open(dbpath, &database) == SQLITE_OK)
         {
-            char *errMsg;
-            
+            char *errMsg;            
             const char *sql_stmt;
-
             
             sql_stmt = "CREATE TABLE if not exists bus(id INTEGER PRIMARY KEY, average TEXT, time TEXT, event TEXT)";
                    
-            //const char *query_stmt = [sql_stmt UTF8String];
-
-            
             if (sqlite3_exec(database, sql_stmt, NULL, NULL, &errMsg) != SQLITE_OK)
             {
                 NSLog(@"Failed to create table");
@@ -377,8 +328,7 @@ double limitWalkRun=1.3;
             if (sqlite3_exec(database, sql_stmt, NULL, NULL, &errMsg) != SQLITE_OK)
             {
                 NSLog(@"Failed to create table 'coordites'");
-            }            
-            
+            }                        
             
             sqlite3_stmt *statement;
             sql_stmt =[NSString stringWithFormat:@"SELECT average, stdDeviation FROM calibration WHERE event = \"%@\"", @"Stopped"];
@@ -386,7 +336,6 @@ double limitWalkRun=1.3;
         
             if(sqlite3_prepare_v2(database, query_stmt, -1, &statement, NULL) == SQLITE_OK) {
                 while(sqlite3_step(statement) == SQLITE_ROW) {
-              
                     calibratedAvgs[0]=sqlite3_column_double(statement, 0);
                     calibratedDeviations[0]=sqlite3_column_double(statement, 1);
                 }
@@ -441,10 +390,7 @@ double limitWalkRun=1.3;
                     calibratedDeviations[5] = sqlite3_column_double(statement, 1);
                 }
             }
-                
-            
-      
-            
+
             sqlite3_close(database);
             
         } else {
@@ -457,7 +403,7 @@ double limitWalkRun=1.3;
     }
     
     NSString *resultado = [NSString stringWithFormat:@"%f", fabsf(calibratedAvgs[0])];
-    NSLog(resultado);
+    NSLog(@"%@", resultado);
     [filemgr release];
     //----------------LIMITS------------------------
     //----------------WALKSTOP----------------------
@@ -485,9 +431,6 @@ double limitWalkRun=1.3;
 
 - (void)viewDidUnload
 {
-    // Release any retained subviews of the main view.
-    // e.g. self.myOutlet = nil;
-       
     [super viewDidUnload];
     // Release any retained subviews of the main view.
     // e.g. self.myOutlet = nil;
@@ -509,9 +452,6 @@ double limitWalkRun=1.3;
     else{
         NSLog(@"disabled!");
         [self stopAccelerometer];
-        
-  //      NSString *stringmax = [NSString stringWithFormat:@"%f",maximo ];
-
     }
 }
     
@@ -607,7 +547,6 @@ double limitWalkRun=1.3;
     NSString* hacc = [[NSNumber numberWithDouble:([location horizontalAccuracy])] stringValue];    
     
     NSString* tms = [[location timestamp] description];
-    NSString* latlng = [NSString stringWithFormat:@"%@ / %@", lat, lng];
     
     NSString* logMsg = [NSString stringWithFormat:@"speed: %@ lat: %@ lng: %@ at %@", spd, lat, lng, tms];
     NSLog(@"%@", logMsg);
@@ -672,37 +611,28 @@ double limitWalkRun=1.3;
 }    
 
 - (void)locationError:(NSError *)error {
-    // Lol
+    // Errors?
 }
 
-
+- (IBAction)doCalibrate:(id)sender{
     
+    NSLog(@"doCalibrate!");
     
+    CalibrationViewController *vmensaje = [[CalibrationViewController alloc] init];
     
-    //
-    - (IBAction)doCalibrate:(id)sender{
-        
-        NSLog(@"doCalibrate!");
-        
-        CalibrationViewController *vmensaje = [[CalibrationViewController alloc] init];
-        
-        //----------
-        [vmensaje setCalibratedAvgStopped:[NSNumber numberWithFloat:fabsf(calibratedAvgs[0])]];
-        [vmensaje setCalibratedAvgWalking:[NSNumber numberWithFloat:fabsf(calibratedAvgs[1])]];
-        [vmensaje setCalibratedAvgRunning:[NSNumber numberWithFloat:fabsf(calibratedAvgs[2])]];
-        [vmensaje setCalibratedAvgBike:[NSNumber numberWithFloat:fabsf(calibratedAvgs[3])]];
-        [vmensaje setCalibratedAvgCar:[NSNumber numberWithFloat:fabsf(calibratedAvgs[4])]];
-        [vmensaje setCalibratedAvgBus:[NSNumber numberWithFloat:fabsf(calibratedAvgs[5])]];
-        
-        [vmensaje setTitle:@"Calibration"];
-        [self.navigationController pushViewController:vmensaje animated:YES];
-        
-        [vmensaje release];
-        
-    }
+    //----------
+    [vmensaje setCalibratedAvgStopped:[NSNumber numberWithFloat:fabsf(calibratedAvgs[0])]];
+    [vmensaje setCalibratedAvgWalking:[NSNumber numberWithFloat:fabsf(calibratedAvgs[1])]];
+    [vmensaje setCalibratedAvgRunning:[NSNumber numberWithFloat:fabsf(calibratedAvgs[2])]];
+    [vmensaje setCalibratedAvgBike:[NSNumber numberWithFloat:fabsf(calibratedAvgs[3])]];
+    [vmensaje setCalibratedAvgCar:[NSNumber numberWithFloat:fabsf(calibratedAvgs[4])]];
+    [vmensaje setCalibratedAvgBus:[NSNumber numberWithFloat:fabsf(calibratedAvgs[5])]];
     
-
-
-
+    [vmensaje setTitle:@"Calibration"];
+    [self.navigationController pushViewController:vmensaje animated:YES];
+    
+    [vmensaje release];
+    
+}
 
 @end
