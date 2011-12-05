@@ -15,13 +15,8 @@
 @interface InMotionViewController : UIViewController <UIAccelerometerDelegate>{
 
     IBOutlet UISwitch *accelerometerStatus;
-
     IBOutlet UILabel *status;
-    
     IBOutlet UIButton *calibrate;
-
-
-    
 
 }
 
@@ -31,7 +26,8 @@
 
 // Location stuff
 @property (nonatomic, retain) CoreLocationController *CLController;
-
+- (bool)busStopNearby:(NSInteger) meters;
+- (void)updateReittiopasData:(NSArray *)stopsArray;
 
 - (IBAction)doCalibrate:(id)sender;
 

@@ -26,6 +26,7 @@ NSMutableArray      *busStopsArray;
 float               myAverageSpeed = 0;
 NSString            *currentType;
 CLLocation          *oldLocation;
+CLLocation          *currentLocation;
 double              distance;
 int const           kMySpeedInterval = 20;      // Get the speed in every kMySpeedInterval seconds
 int const           kSpeedMaxAvgTime = 3 * 60;  // Use no more data than from last 3min for speed average
@@ -43,8 +44,9 @@ float const         kBusMinThreshold = 12; // get data
 float const         kBusMaxThreshold = 60;
 float const         kCarMinThreshold = 20;
 float const         kCarMaxThreshold = 130;
-
+NSDate              *lastUpdatedAt;
 NSArray             *stopKeys;
+//NSTimer             *testTimer;
 
 sqlite3 *database;
 
@@ -256,6 +258,11 @@ double limitWalkRun=1.3;
         calibratedDeviations[i]=0.0;
     }
     
+    // DEBUG TEST! Remove!
+    NSString *coordz = [NSString stringWithString:@"2545860,6675272"];
+    NSLog(@"lat: %@", [[coordz componentsSeparatedByString:@","] objectAtIndex:1]);
+    NSLog(@"lng: %@", [[coordz componentsSeparatedByString:@","] objectAtIndex:0]);    
+    
     // Location controller
 	CLController = [[CoreLocationController alloc] init];
 	CLController.delegate = self;
@@ -263,9 +270,9 @@ double limitWalkRun=1.3;
 	[CLController.locMgr startUpdatingLocation];
 
 
-    avgspeed = 999; // Non-initialized value, just to show if it's not changed.
+    avgspeed = -1; // Non-initialized value, just to show if it's not changed.
     avgSpeedArray = [[NSMutableArray alloc] init];
-    stopKeys = [NSArray arrayWithObjects:@"stopcode", @"distance", @"distancing", nil];
+    stopKeys = [NSArray arrayWithObjects:@"stopcode", @"distance", @"distancing", @"lat", @"lng", nil];
     
     
     // TODO: Move test code somewhere where it makes sense
@@ -283,6 +290,9 @@ double limitWalkRun=1.3;
         
         [self updateReittiopasData:stops];        
     }
+    
+    [self busStopNearby:100];
+    
 }
 
 - (void)viewWillAppear:(BOOL)animated {
@@ -474,9 +484,11 @@ double limitWalkRun=1.3;
         
         if (index == NSNotFound) {
             // Busstop was not found in busStopArray, adding it
-            NSArray *objs = [NSArray arrayWithObjects:[bstop objectForKey:@"code"],
-                             [bstop objectForKey:@"dist"],
-                             [NSNumber numberWithInt:0],
+            NSArray *objs = [NSArray arrayWithObjects:[bstop objectForKey:@"code"], // stop code
+                             [bstop objectForKey:@"dist"], // distance
+                             [NSNumber numberWithInt:0], // distancing                    
+                             [[[bstop objectForKey:@"coords"] componentsSeparatedByString:@","] objectAtIndex:1], //lat
+                             [[[bstop objectForKey:@"coords"] componentsSeparatedByString:@","] objectAtIndex:0], //lng                            
                              nil];
             NSMutableDictionary *aStopDict = [NSDictionary dictionaryWithObjects:objs forKeys:stopKeys];
             [busStopsArray addObject:aStopDict];
@@ -521,11 +533,53 @@ double limitWalkRun=1.3;
               [aStop objectForKey:@"distancing"]);
     }
     
+    lastUpdatedAt = [NSDate date];
+    
 }
 
+// Returns true if a busstop is in 'meters' bounding box. Safe to call often, calls Reittiopas API only when neccessary. 
+- (bool)busStopNearby:(NSInteger) meters {
+    
+    // Check wheter the busStopArray data has gone stale
+    NSTimeInterval sinceLastUpdate = [lastUpdatedAt timeIntervalSinceNow];
+    double avgSpeedInMetersPerSecond = (myAverageSpeed * 1000) / 3600;
+    double updateInterval = avgSpeedInMetersPerSecond * sinceLastUpdate;
+        
+    // Update the data if needed
+    if ((updateInterval * 1.1) > meters) { 
+        NSURL *webServiceURL;
+        NSString *urlString = [NSString stringWithFormat:@"http://api.reittiopas.fi/hsl/prod/?request=stops_area&epsg_in=4326&center_coordinate=%@,%@&user=inmotion&pass=in002726&diameter=%@", 
+                               [currentLocation coordinate].longitude,
+                               [currentLocation coordinate].latitude,
+                               meters];
+        webServiceURL = [NSURL URLWithString:urlString];
+        NSError *error = nil;
+        NSData *data = [NSData dataWithContentsOfURL:webServiceURL];
+        NSArray *stops;
+        
+        if (data != NULL) {
+            stops = [NSJSONSerialization 
+                     JSONObjectWithData:data 
+                     options:NSJSONReadingMutableLeaves 
+                     error:&error];
+            
+            [self updateReittiopasData:stops];        
+        }            
+    }
 
-- (bool)busStopNearby:(NSInteger *) meters {
-    return true;
+    // Check the distances to all the busstops in busStopsArray
+    for (id aStop in busStopsArray) {        
+        CLLocation *stopLocation = [[CLLocation alloc] initWithLatitude:
+                                    [[aStop objectForKey:@"lat"] doubleValue]
+                                    longitude:[[aStop objectForKey:@"lng"] doubleValue]];
+        
+        [currentLocation distanceFromLocation:stopLocation];
+        if ([currentLocation distanceFromLocation:stopLocation] < meters) {
+            return true; 
+        }
+    }
+    return false;        
+
 };
 
 - (float)getAverageSpeed {
@@ -540,6 +594,7 @@ double limitWalkRun=1.3;
 
 
 - (void)locationUpdate:(CLLocation *)location {
+    currentLocation = [location copy];
     NSString* spd = [[NSNumber numberWithFloat:([location speed])] stringValue];
     NSString* lat = [[NSNumber numberWithDouble:([location coordinate].latitude)] stringValue];
     NSString* lng = [[NSNumber numberWithDouble:([location coordinate].longitude)] stringValue];
