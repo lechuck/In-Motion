@@ -17,7 +17,9 @@
     IBOutlet UISwitch *accelerometerStatus;
     IBOutlet UILabel *status;
     IBOutlet UIButton *calibrate;
-
+    IBOutlet UILabel *debugLabel;
+    IBOutlet UILabel *debugLabelMeters;    
+    IBOutlet UILabel *debugLabelCalled;    
 }
 
 
@@ -26,13 +28,20 @@
 
 // Location stuff
 @property (nonatomic, retain) CoreLocationController *CLController;
+
+// Debug stuff
+@property (nonatomic, retain) IBOutlet UILabel *debugLabel;
+@property (nonatomic, retain) IBOutlet UILabel *debugLabelMeters;
+@property (nonatomic, retain) IBOutlet UILabel *debugLabelCalled;
+
+
 - (bool)busStopNearby:(NSInteger) meters;
 - (void)updateReittiopasData:(NSArray *)stopsArray;
 
+
+
 - (IBAction)doCalibrate:(id)sender;
-
 - (IBAction)statusAccelerometer:(id)sender;
-
 -(void)writeBD;
 
 

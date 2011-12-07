@@ -18,6 +18,13 @@
 @synthesize accelerometerStatus;
 @synthesize status;
 
+// Debug, remember to remove from code
+@synthesize debugLabel;
+@synthesize debugLabelMeters;
+@synthesize debugLabelCalled;
+
+
+
 // Location
 @synthesize CLController;
 double              avgspeed;
@@ -46,7 +53,7 @@ float const         kCarMinThreshold = 20;
 float const         kCarMaxThreshold = 130;
 NSDate              *lastUpdatedAt;
 NSArray             *stopKeys;
-//NSTimer             *testTimer;
+NSTimer             *testTimer;
 
 sqlite3 *database;
 
@@ -272,12 +279,12 @@ double limitWalkRun=1.3;
 
     avgspeed = -1; // Non-initialized value, just to show if it's not changed.
     avgSpeedArray = [[NSMutableArray alloc] init];
-    stopKeys = [NSArray arrayWithObjects:@"stopcode", @"distance", @"distancing", @"lat", @"lng", nil];
+    stopKeys = [[NSArray arrayWithObjects:@"stopcode", @"distance", @"distancing", @"lat", @"lng", nil] retain];
     
     
     // TODO: Move test code somewhere where it makes sense
     NSURL *webServiceURL;
-    webServiceURL = [NSURL URLWithString:@"http://api.reittiopas.fi/hsl/prod/?request=stops_area&epsg_in=4326&center_coordinate=24.87630350190869,60.1626670395878&user=inmotion&pass=in002726&diameter=400"];
+     webServiceURL = [NSURL URLWithString:@"http://api.reittiopas.fi/hsl/prod/?request=stops_area&epsg_in=4326&epsg_out=4326&center_coordinate=24.87630350190869,60.1626670395878&user=inmotion&pass=in002726&diameter=400"];
     NSError *error = nil;
  	NSData *data = [NSData dataWithContentsOfURL:webServiceURL];
     
@@ -293,6 +300,23 @@ double limitWalkRun=1.3;
     
     [self busStopNearby:100];
     
+    testTimer = [NSTimer scheduledTimerWithTimeInterval:10.0
+                                            target:self 
+                                            selector:@selector(testTimerFired:) 
+                                            userInfo:nil 
+                                            repeats:YES];    
+    
+}
+
+-(void)testTimerFired:(NSTimer *) theTimer
+{    
+    NSLog(@"timerFired @ %@", [theTimer fireDate]);
+    if ([self busStopNearby:30]) {
+        [debugLabel setText:@"nearby!"];
+    }
+    else {
+        [debugLabel setText:@"not nearby :/"];
+    }
 }
 
 - (void)viewWillAppear:(BOOL)animated {
@@ -441,6 +465,7 @@ double limitWalkRun=1.3;
 
 - (void)viewDidUnload
 {
+    [stopKeys release];
     [super viewDidUnload];
     // Release any retained subviews of the main view.
     // e.g. self.myOutlet = nil;
@@ -467,9 +492,14 @@ double limitWalkRun=1.3;
     
 
 - (void)updateReittiopasData:(NSArray *)stopsArray {
-    // Create the busStopsArray
+    // Debug
+    NSDate *now = [NSDate date];
+    [debugLabelCalled setText:[NSString stringWithFormat:@"updated: %@", [now description] ]];
+    
+    // If no busStopsArray array, create it 
     if (busStopsArray == NULL) {
         busStopsArray = [[NSMutableArray alloc] init];
+        NSLog(@"busStopArray created.");
     }
     
     int index = -1;
@@ -477,29 +507,37 @@ double limitWalkRun=1.3;
     // Add each new stop to array and update the old stops. Remove unneeded stops.
     for (id bstop in stopsArray) {
         
-        // index of the stop if it's already in the busStopArray
-        index = [busStopsArray indexOfObjectPassingTest:^BOOL(id obj, NSUInteger idx, BOOL *stop) {
-            return ([ [obj objectForKey:@"stopcode"] isEqualToString:[bstop objectForKey:@"code"] ]);
-        }];
+        // debug again
+        NSLog(@"Looking for code....");
+        NSLog([bstop objectForKey:@"code"]);
+
+        // index of the stop if it's already in the busStopArray        
+        index = [busStopsArray indexOfObjectPassingTest:
+                 ^BOOL(id obj, NSUInteger idx, BOOL *stop) {
+                     return ([ [[obj objectForKey:@"stopcode"] description] isEqualToString:[bstop objectForKey:@"code"] ]);
+                }];
         
         if (index == NSNotFound) {
             // Busstop was not found in busStopArray, adding it
-            NSArray *objs = [NSArray arrayWithObjects:[bstop objectForKey:@"code"], // stop code
-                             [bstop objectForKey:@"dist"], // distance
-                             [NSNumber numberWithInt:0], // distancing                    
-                             [[[bstop objectForKey:@"coords"] componentsSeparatedByString:@","] objectAtIndex:1], //lat
-                             [[[bstop objectForKey:@"coords"] componentsSeparatedByString:@","] objectAtIndex:0], //lng                            
+            
+            // Add the values of a busstop to objs. Used to create the dictionary 
+            NSMutableArray *objs = [NSMutableArray arrayWithObjects:[bstop objectForKey:@"code"],   // stop code
+                             [bstop objectForKey:@"dist"],                                          // distance
+                             [NSNumber numberWithInt:0],                                            // distancing                    
+                             [[[bstop objectForKey:@"coords"] componentsSeparatedByString:@","] objectAtIndex:1], // lat
+                             [[[bstop objectForKey:@"coords"] componentsSeparatedByString:@","] objectAtIndex:0], // lng                            
                              nil];
-            NSMutableDictionary *aStopDict = [NSDictionary dictionaryWithObjects:objs forKeys:stopKeys];
-            [busStopsArray addObject:aStopDict];
+            
+            [busStopsArray addObject:[NSMutableDictionary dictionaryWithObjects:objs forKeys:stopKeys]];
+            
         }
         else {
             // Busstop found, update the info
             NSInteger distanceToStop = [[[busStopsArray objectAtIndex:index] valueForKey:@"distance"] intValue];
             NSInteger distancing = [[[busStopsArray objectAtIndex:index] valueForKey:@"distancing"] intValue];
             
-            // Distance to the busstop is growing, remove if happens more than kDistancingMax times
             if ([[bstop valueForKey:@"distance"] intValue] > distanceToStop) {
+                // Distance to the busstop is growing, remove if happens more than kDistancingMax times
                 distancing++;
                 if (distancing > kDistancingMax) {
                     [busStopsArray removeObjectAtIndex:index];
@@ -511,14 +549,14 @@ double limitWalkRun=1.3;
                 }                
             }
             else {
-                // Reset the distancoing value
+                // Reset the distancing value
                 [[busStopsArray objectAtIndex:index] setValue: [NSNumber numberWithInt:0] forKey:@"distancing"];                
             }
             
             // Update the distance
-            [[busStopsArray objectAtIndex:index] setValue:[bstop valueForKey:@"distance"] forKey:@"distance"];
-            
+            [[busStopsArray objectAtIndex:index] setValue:[bstop valueForKey:@"dist"] forKey:@"distance"];
         };
+    
     }
     
     
@@ -533,29 +571,35 @@ double limitWalkRun=1.3;
               [aStop objectForKey:@"distancing"]);
     }
     
-    lastUpdatedAt = [NSDate date];
+    lastUpdatedAt = [[NSDate alloc] init];
     
 }
 
 // Returns true if a busstop is in 'meters' bounding box. Safe to call often, calls Reittiopas API only when neccessary. 
 - (bool)busStopNearby:(NSInteger) meters {
+    NSLog(@"busStopNearbyCalled...");
     
     // Check wheter the busStopArray data has gone stale
-    NSTimeInterval sinceLastUpdate = [lastUpdatedAt timeIntervalSinceNow];
+    if (myAverageSpeed == 0) {
+        myAverageSpeed = 0.1;
+    }
+    NSTimeInterval sinceLastUpdate = -1* [lastUpdatedAt timeIntervalSinceNow];
     double avgSpeedInMetersPerSecond = (myAverageSpeed * 1000) / 3600;
     double updateInterval = avgSpeedInMetersPerSecond * sinceLastUpdate;
         
     // Update the data if needed
-    if ((updateInterval * 1.1) > meters) { 
+    //if ((updateInterval * 1.1) > meters) { 
+    if (true) { 
         NSURL *webServiceURL;
-        NSString *urlString = [NSString stringWithFormat:@"http://api.reittiopas.fi/hsl/prod/?request=stops_area&epsg_in=4326&center_coordinate=%@,%@&user=inmotion&pass=in002726&diameter=%@", 
+        NSString *urlString = [NSString stringWithFormat:@"http://api.reittiopas.fi/hsl/prod/?request=stops_area&epsg_in=4326&epsg_out=4326&center_coordinate=%f,%f&user=inmotion&pass=in002726&diameter=400", 
                                [currentLocation coordinate].longitude,
                                [currentLocation coordinate].latitude,
                                meters];
+        NSLog(urlString);
         webServiceURL = [NSURL URLWithString:urlString];
         NSError *error = nil;
         NSData *data = [NSData dataWithContentsOfURL:webServiceURL];
-        NSArray *stops;
+        NSMutableArray *stops;
         
         if (data != NULL) {
             stops = [NSJSONSerialization 
@@ -567,17 +611,32 @@ double limitWalkRun=1.3;
         }            
     }
 
+    // Debug smallest
+    double closest = 8888888;
+    
     // Check the distances to all the busstops in busStopsArray
     for (id aStop in busStopsArray) {        
         CLLocation *stopLocation = [[CLLocation alloc] initWithLatitude:
                                     [[aStop objectForKey:@"lat"] doubleValue]
                                     longitude:[[aStop objectForKey:@"lng"] doubleValue]];
+        // Debug
+        NSLog([NSString stringWithFormat:@"lat: %f AND lng: %f", 
+               [[aStop objectForKey:@"lat"] doubleValue],
+               [[aStop objectForKey:@"lng"] doubleValue]]);
         
-        [currentLocation distanceFromLocation:stopLocation];
+        if (closest > [currentLocation distanceFromLocation:stopLocation]) {
+            closest = [currentLocation distanceFromLocation:stopLocation];
+        }
+        
         if ([currentLocation distanceFromLocation:stopLocation] < meters) {
             return true; 
         }
+        
+        [stopLocation release];
     }
+    
+    [debugLabelMeters setText:[NSString stringWithFormat:@"%f meters.", closest]];
+    
     return false;        
 
 };
