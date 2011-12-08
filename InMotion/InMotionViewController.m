@@ -73,6 +73,7 @@ int current_vector=1;
 bool first_time=true;
 bool busOn=false;
 bool carOn=false;
+bool busNear=false;
 
 double calibratedAvgs[6], calibratedDeviations[6];
 /*
@@ -293,7 +294,7 @@ double limitMaxBike=1.2;
                 [status setText:@"stopped"];
                 evento=@"stopped";
             }
-            else if (calcAvg<=limitBus && avgSpeed>kBusMinThreshold && avgSpeed<kBusMaxThreshold){ // && busnearstop (x)
+            else if (calcAvg<=limitBus && avgSpeed>kBusMinThreshold && avgSpeed<kBusMaxThreshold  && busNear){ // && busnearstop (x)
                 [status setText:@"Bus"];
                 evento=@"bus";
                 busOn=true;
@@ -308,7 +309,7 @@ double limitMaxBike=1.2;
                 evento=@"bike";
             }
         }
-        else if (busOn && calcAvg>limitWalkStop && avgSpeed>kWalkingMinThreshold && avgSpeed<kBusMinThreshold){ // &&busnearstop (x)
+        else if (busOn && calcAvg>limitWalkStop && avgSpeed>kWalkingMinThreshold && avgSpeed<kBusMinThreshold && busNear){ // &&busnearstop (x)
             busOn=false;
         }
         else if (busOn){
@@ -779,7 +780,7 @@ double limitMaxBike=1.2;
         
         // Speed in km/h
         avgspeed = (distance / 1000) / (([[location timestamp] timeIntervalSinceDate:[oldLocation timestamp]] / 60) / 60);
-        
+        busNear=[self busStopIn:30 fromLocation:oldLocation];
         // Set current location as the old location
         oldLocation = [location copy];
         

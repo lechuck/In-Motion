@@ -9,12 +9,12 @@
          continueAfterRunningActions = "No"
          isPathRelative = "1"
          filePath = "InMotion/InMotionViewController.m"
-         timestampString = "345052658.492044"
+         timestampString = "345069033.528374"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "417"
-         endingLineNumber = "417"
-         landmarkName = "-testTimerFired:"
+         startingLineNumber = "418"
+         endingLineNumber = "418"
+         landmarkName = "-stopAccelerometer"
          landmarkType = "5">
       </FileBreakpoint>
       <FileBreakpoint
@@ -23,12 +23,12 @@
          continueAfterRunningActions = "No"
          isPathRelative = "1"
          filePath = "InMotion/InMotionViewController.m"
-         timestampString = "345052658.492044"
+         timestampString = "345069033.528374"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "400"
-         endingLineNumber = "400"
-         landmarkName = "-viewDidLoad"
+         startingLineNumber = "401"
+         endingLineNumber = "401"
+         landmarkName = "-accelerometer:didAccelerate:"
          landmarkType = "5">
       </FileBreakpoint>
    </FileBreakpoints>
