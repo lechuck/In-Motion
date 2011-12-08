@@ -66,10 +66,13 @@ NSString *evento = @"stop";
 
 double v1[VECTOR_SIZE], v2[VECTOR_SIZE];
 double avg1,avg2,summation;
+double avgSpeed;
 
 int counter=0;
 int current_vector=1;
 bool first_time=true;
+bool busOn=false;
+bool carOn=false;
 
 double calibratedAvgs[6], calibratedDeviations[6];
 /*
@@ -83,6 +86,10 @@ double calibratedAvgs[6], calibratedDeviations[6];
 
 double limitWalkStop=1.05;
 double limitWalkRun=1.3;
+double limitBus=1.05;
+double limitCar=1.05;
+double limitMinBike=1.05;
+double limitMaxBike=1.2;
 
 - (IBAction)btnWalking:(id)sender{
     evento=@"walking";
@@ -104,6 +111,79 @@ double limitWalkRun=1.3;
     evento=@"bus";
 }
 
+- (float)getAverageSpeed {
+    return myAverageSpeed;
+};
+
+- (float)getSpeed {
+    return avgspeed;
+};
+
+// Returns true if a busstop is in 'meters' bounding box. Safe to call often, calls Reittiopas API only when neccessary. 
+- (bool)busStopNearby:(NSInteger) meters {
+    NSLog(@"busStopNearbyCalled...");
+    
+    // Check wheter the busStopArray data has gone stale
+    if (myAverageSpeed == 0) {
+        myAverageSpeed = 0.1;
+    }
+    NSTimeInterval sinceLastUpdate = -1* [lastUpdatedAt timeIntervalSinceNow];
+    double avgSpeedInMetersPerSecond = (myAverageSpeed * 1000) / 3600;
+    double updateInterval = avgSpeedInMetersPerSecond * sinceLastUpdate;
+    
+    // Update the data if needed
+    //if ((updateInterval * 1.1) > meters) { 
+    if (true) { 
+        NSURL *webServiceURL;
+        NSString *urlString = [NSString stringWithFormat:@"http://api.reittiopas.fi/hsl/prod/?request=stops_area&epsg_in=4326&epsg_out=4326&center_coordinate=%f,%f&user=inmotion&pass=in002726&diameter=400", 
+                               [currentLocation coordinate].longitude,
+                               [currentLocation coordinate].latitude,
+                               meters];
+        NSLog(urlString);
+        webServiceURL = [NSURL URLWithString:urlString];
+        NSError *error = nil;
+        NSData *data = [NSData dataWithContentsOfURL:webServiceURL];
+        NSMutableArray *stops;
+        
+        if (data != NULL) {
+            stops = [NSJSONSerialization 
+                     JSONObjectWithData:data 
+                     options:NSJSONReadingMutableLeaves 
+                     error:&error];
+            
+            [self updateReittiopasData:stops];        
+        }            
+    }
+    
+    // Debug smallest
+    double closest = 8888888;
+    
+    // Check the distances to all the busstops in busStopsArray
+    for (id aStop in busStopsArray) {        
+        CLLocation *stopLocation = [[CLLocation alloc] initWithLatitude:
+                                    [[aStop objectForKey:@"lat"] doubleValue]
+                                                              longitude:[[aStop objectForKey:@"lng"] doubleValue]];
+        // Debug
+        NSLog([NSString stringWithFormat:@"lat: %f AND lng: %f", 
+               [[aStop objectForKey:@"lat"] doubleValue],
+               [[aStop objectForKey:@"lng"] doubleValue]]);
+        
+        if (closest > [currentLocation distanceFromLocation:stopLocation]) {
+            closest = [currentLocation distanceFromLocation:stopLocation];
+        }
+        
+        if ([currentLocation distanceFromLocation:stopLocation] < meters) {
+            return true; 
+        }
+        
+        [stopLocation release];
+    }
+    
+    [debugLabelMeters setText:[NSString stringWithFormat:@"%f meters.", closest]];
+    
+    return false;        
+    
+};
 
 - (void)writeBD{
     
@@ -127,27 +207,53 @@ double limitWalkRun=1.3;
     
     sqlite3_stmt *statement;
     const char *dbpath = [databasePath UTF8String];
+    avgSpeed = [self getSpeed];
     
     if (sqlite3_open(dbpath, &database) == SQLITE_OK){
         
-        if(calcAvg>limitWalkRun){
-            [status setText:@"running"];
-            evento=@"runnning";
-        
+        if (!busOn && !carOn){ 
+            if(calcAvg>limitWalkRun && avgSpeed>kRunningMinThreshold){
+                [status setText:@"running"];
+                evento=@"runnning";
+                
+            }
+            else if(calcAvg<=limitWalkRun && calcAvg >= limitWalkStop && avgSpeed<=kWalkingMaxThreshold && avgSpeed>=kWalkingMinThreshold){
+                [status setText:@"walking"];
+                evento=@"walking";
+            }   
+            
+            else if (calcAvg<limitWalkStop && avgSpeed <= kIDLEMaxThreshold) {
+                [status setText:@"stopped"];
+                evento=@"stopped";
+            }
+            else if (calcAvg<=limitBus && avgSpeed>kBusMinThreshold && avgSpeed<kBusMaxThreshold){ // && busnearstop (x)
+                [status setText:@"Bus"];
+                evento=@"bus";
+                busOn=true;
+            }
+            else if (calcAvg<=limitCar && avgSpeed>kCarMinThreshold && avgSpeed<kCarMaxThreshold){
+                [status setText:@"Car"];
+                evento=@"car";
+                carOn=true;
+            }
+            else if (calcAvg>limitMinBike && calcAvg<limitMaxBike && avgSpeed>kCyclingMinThreshold && avgSpeed<kCyclingMaxThreshold){
+                [status setText:@"Bike"];
+                evento=@"bike";
+            }
         }
-        else if(calcAvg<=limitWalkRun && calcAvg > limitWalkStop){
-            [status setText:@"walking"];
-            evento=@"walking";
-        }   
-        /* MIX WITH TONY WORK
-        else if(calcAvg<=1.05 && speed() > 10k/h){
-            [status setText:@"bus"];
+        else if (busOn && calcAvg>limitWalkStop && avgSpeed>kWalkingMinThreshold && avgSpeed<kBusMinThreshold){ // &&busnearstop (x)
+            busOn=false;
+        }
+        else if (busOn){
+            [status setText:@"Bus"];
             evento=@"bus";
         }
-         */
-        else{
-            [status setText:@"stopped"];
-            evento=@"stopped";
+        else if (carOn && calcAvg>limitWalkStop && avgSpeed>kWalkingMinThreshold && avgSpeed<kCarMinThreshold){
+            carOn=false;
+        }
+        else if (carOn){
+            [status setText:@"Car"];
+            evento=@"car";
         }
         
         NSString *querySQL = [NSString stringWithFormat:@"insert into bus (average, time, event) values (\"%@\",\"%@\",\"%@\")", avg, tiempo, evento];
@@ -455,6 +561,15 @@ double limitWalkRun=1.3;
         limitWalkRun=(calibratedAvgs[1]+2*calibratedDeviations[1]+1.4)/2;
     else limitWalkRun=(calibratedAvgs[1]+2*calibratedDeviations[1]+calibratedAvgs[2]-2*calibratedDeviations[2])/2;
     
+    if(calibratedAvgs[5]!=0)
+        limitBus=calibratedAvgs[5]+2*calibratedDeviations[5];
+    if(calibratedAvgs[4]!=0)
+        limitCar=calibratedAvgs[4]+2*calibratedDeviations[4];
+    if (calibratedAvgs[3]!=0){
+        limitMinBike=calibratedAvgs[3]-2*calibratedDeviations[3];
+        limitMaxBike=calibratedAvgs[3]+2*calibratedDeviations[3];
+    }
+    
     NSLog(@"%f", fabs(limitWalkStop));
     NSLog(@"%f", fabs(limitWalkRun));
 }
@@ -574,82 +689,6 @@ double limitWalkRun=1.3;
     lastUpdatedAt = [[NSDate alloc] init];
     
 }
-
-// Returns true if a busstop is in 'meters' bounding box. Safe to call often, calls Reittiopas API only when neccessary. 
-- (bool)busStopNearby:(NSInteger) meters {
-    NSLog(@"busStopNearbyCalled...");
-    
-    // Check wheter the busStopArray data has gone stale
-    if (myAverageSpeed == 0) {
-        myAverageSpeed = 0.1;
-    }
-    NSTimeInterval sinceLastUpdate = -1* [lastUpdatedAt timeIntervalSinceNow];
-    double avgSpeedInMetersPerSecond = (myAverageSpeed * 1000) / 3600;
-    double updateInterval = avgSpeedInMetersPerSecond * sinceLastUpdate;
-        
-    // Update the data if needed
-    //if ((updateInterval * 1.1) > meters) { 
-    if (true) { 
-        NSURL *webServiceURL;
-        NSString *urlString = [NSString stringWithFormat:@"http://api.reittiopas.fi/hsl/prod/?request=stops_area&epsg_in=4326&epsg_out=4326&center_coordinate=%f,%f&user=inmotion&pass=in002726&diameter=400", 
-                               [currentLocation coordinate].longitude,
-                               [currentLocation coordinate].latitude,
-                               meters];
-        NSLog(urlString);
-        webServiceURL = [NSURL URLWithString:urlString];
-        NSError *error = nil;
-        NSData *data = [NSData dataWithContentsOfURL:webServiceURL];
-        NSMutableArray *stops;
-        
-        if (data != NULL) {
-            stops = [NSJSONSerialization 
-                     JSONObjectWithData:data 
-                     options:NSJSONReadingMutableLeaves 
-                     error:&error];
-            
-            [self updateReittiopasData:stops];        
-        }            
-    }
-
-    // Debug smallest
-    double closest = 8888888;
-    
-    // Check the distances to all the busstops in busStopsArray
-    for (id aStop in busStopsArray) {        
-        CLLocation *stopLocation = [[CLLocation alloc] initWithLatitude:
-                                    [[aStop objectForKey:@"lat"] doubleValue]
-                                    longitude:[[aStop objectForKey:@"lng"] doubleValue]];
-        // Debug
-        NSLog([NSString stringWithFormat:@"lat: %f AND lng: %f", 
-               [[aStop objectForKey:@"lat"] doubleValue],
-               [[aStop objectForKey:@"lng"] doubleValue]]);
-        
-        if (closest > [currentLocation distanceFromLocation:stopLocation]) {
-            closest = [currentLocation distanceFromLocation:stopLocation];
-        }
-        
-        if ([currentLocation distanceFromLocation:stopLocation] < meters) {
-            return true; 
-        }
-        
-        [stopLocation release];
-    }
-    
-    [debugLabelMeters setText:[NSString stringWithFormat:@"%f meters.", closest]];
-    
-    return false;        
-
-};
-
-- (float)getAverageSpeed {
-    return myAverageSpeed;
-};
-
-- (float)getSpeed {
-    return avgspeed;
-};
-
-
 
 
 - (void)locationUpdate:(CLLocation *)location {
