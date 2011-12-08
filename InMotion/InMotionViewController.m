@@ -185,6 +185,73 @@ double limitMaxBike=1.2;
     
 };
 
+// Returns true if a busstop is in 'meters' bounding box. Safe to call often, calls Reittiopas API only when neccessary. 
+- (bool)busStopIn:(NSInteger) meters fromLocation:(CLLocation*)searchFromLocation {
+    NSLog(@"busStopNearbyCalled...");
+    
+    // Check wheter the busStopArray data has gone stale
+    if (myAverageSpeed == 0) {
+        myAverageSpeed = 0.1;
+    }
+    NSTimeInterval sinceLastUpdate = -1* [lastUpdatedAt timeIntervalSinceNow];
+    double avgSpeedInMetersPerSecond = (myAverageSpeed * 1000) / 3600;
+    double updateInterval = avgSpeedInMetersPerSecond * sinceLastUpdate;
+    
+    // Update the data if needed
+    //if ((updateInterval * 1.1) > meters) { 
+    if (true) { 
+        NSURL *webServiceURL;
+        NSString *urlString = [NSString stringWithFormat:@"http://api.reittiopas.fi/hsl/prod/?request=stops_area&epsg_in=4326&epsg_out=4326&center_coordinate=%f,%f&user=inmotion&pass=in002726&diameter=400", 
+                               [searchFromLocation coordinate].longitude,
+                               [searchFromLocation coordinate].latitude,
+                               meters];
+        NSLog(urlString);
+        webServiceURL = [NSURL URLWithString:urlString];
+        NSError *error = nil;
+        NSData *data = [NSData dataWithContentsOfURL:webServiceURL];
+        NSMutableArray *stops;
+        
+        if (data != NULL) {
+            stops = [NSJSONSerialization 
+                     JSONObjectWithData:data 
+                     options:NSJSONReadingMutableLeaves 
+                     error:&error];
+            
+            [self updateReittiopasData:stops];        
+        }            
+    }
+    
+    // Debug smallest
+    double closest = 8888888;
+    
+    // Check the distances to all the busstops in busStopsArray
+    for (id aStop in busStopsArray) {        
+        CLLocation *stopLocation = [[CLLocation alloc] initWithLatitude:
+                                    [[aStop objectForKey:@"lat"] doubleValue]
+                                                              longitude:[[aStop objectForKey:@"lng"] doubleValue]];
+        // Debug
+        NSLog([NSString stringWithFormat:@"lat: %f AND lng: %f", 
+               [[aStop objectForKey:@"lat"] doubleValue],
+               [[aStop objectForKey:@"lng"] doubleValue]]);
+        
+        if (closest > [searchFromLocation distanceFromLocation:stopLocation]) {
+            closest = [searchFromLocation distanceFromLocation:stopLocation];
+        }
+        
+        if ([searchFromLocation distanceFromLocation:stopLocation] < meters) {
+            return true; 
+        }
+        
+        [stopLocation release];
+    }
+    
+    [debugLabelMeters setText:[NSString stringWithFormat:@"%f meters.", closest]];
+    
+    return false;        
+    
+};
+
+
 - (void)writeBD{
     
     NSLog(@"WRITE 2 DB");

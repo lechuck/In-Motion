@@ -36,7 +36,9 @@
 
 
 - (bool)busStopNearby:(NSInteger) meters;
+- (bool)busStopIn:(NSInteger) meters fromLocation:(CLLocation*)searchFromLocation;
 - (void)updateReittiopasData:(NSArray *)stopsArray;
+
 
 
 
