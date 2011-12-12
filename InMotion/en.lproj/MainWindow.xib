@@ -316,12 +316,18 @@
 							<bool key="EncodedWithXMLCoder">YES</bool>
 							<string>accelerometerStatus</string>
 							<string>calibrate</string>
+							<string>debugLabel</string>
+							<string>debugLabelCalled</string>
+							<string>debugLabelMeters</string>
 							<string>status</string>
 						</object>
 						<object class="NSMutableArray" key="dict.values">
 							<bool key="EncodedWithXMLCoder">YES</bool>
 							<string>UISwitch</string>
 							<string>UIButton</string>
+							<string>UILabel</string>
+							<string>UILabel</string>
+							<string>UILabel</string>
 							<string>UILabel</string>
 						</object>
 					</object>
@@ -331,6 +337,9 @@
 							<bool key="EncodedWithXMLCoder">YES</bool>
 							<string>accelerometerStatus</string>
 							<string>calibrate</string>
+							<string>debugLabel</string>
+							<string>debugLabelCalled</string>
+							<string>debugLabelMeters</string>
 							<string>status</string>
 						</object>
 						<object class="NSMutableArray" key="dict.values">
@@ -342,6 +351,18 @@
 							<object class="IBToOneOutletInfo">
 								<string key="name">calibrate</string>
 								<string key="candidateClassName">UIButton</string>
+							</object>
+							<object class="IBToOneOutletInfo">
+								<string key="name">debugLabel</string>
+								<string key="candidateClassName">UILabel</string>
+							</object>
+							<object class="IBToOneOutletInfo">
+								<string key="name">debugLabelCalled</string>
+								<string key="candidateClassName">UILabel</string>
+							</object>
+							<object class="IBToOneOutletInfo">
+								<string key="name">debugLabelMeters</string>
+								<string key="candidateClassName">UILabel</string>
 							</object>
 							<object class="IBToOneOutletInfo">
 								<string key="name">status</string>

@@ -282,7 +282,7 @@ double limitMaxBike=1.2;
             }   
             
             else if (calcAvg<limitWalkStop && avgSpeed <= kIDLEMaxThreshold) {
-                [status setText:@"stopped"];
+                [status setText:@"IDLE"];
                 evento=@"stopped";
             }
             //else if (calcAvg<=limitBus && avgSpeed>kBusMinThreshold && avgSpeed<kBusMaxThreshold  && busNear){ // && busnearstop (x)

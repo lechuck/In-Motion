@@ -17,6 +17,7 @@
 		9E29B1CB14891BA90025FE43 /* newBD.sqlite in Resources */ = {isa = PBXBuildFile; fileRef = 9E29B1CA14891BA90025FE43 /* newBD.sqlite */; };
 		9E29B1CF14891C640025FE43 /* CoreLocationController.m in Sources */ = {isa = PBXBuildFile; fileRef = 9E29B1CE14891C640025FE43 /* CoreLocationController.m */; };
 		9E29B1D114891CE50025FE43 /* CoreLocation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9E29B1D014891CE50025FE43 /* CoreLocation.framework */; };
+		9EA9A4211496A9B600A35D84 /* inmotionbg.png in Resources */ = {isa = PBXBuildFile; fileRef = 9EA9A4201496A9B600A35D84 /* inmotionbg.png */; };
 		9EEC75731420DECE005A7E22 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9EEC75721420DECE005A7E22 /* UIKit.framework */; };
 		9EEC75751420DECE005A7E22 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9EEC75741420DECE005A7E22 /* Foundation.framework */; };
 		9EEC75771420DECE005A7E22 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9EEC75761420DECE005A7E22 /* CoreGraphics.framework */; };
@@ -42,6 +43,7 @@
 		9E29B1CD14891C640025FE43 /* CoreLocationController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CoreLocationController.h; sourceTree = "<group>"; };
 		9E29B1CE14891C640025FE43 /* CoreLocationController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CoreLocationController.m; sourceTree = "<group>"; };
 		9E29B1D014891CE50025FE43 /* CoreLocation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreLocation.framework; path = System/Library/Frameworks/CoreLocation.framework; sourceTree = SDKROOT; };
+		9EA9A4201496A9B600A35D84 /* inmotionbg.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = inmotionbg.png; sourceTree = "<group>"; };
 		9EEC756E1420DECE005A7E22 /* InMotion.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = InMotion.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		9EEC75721420DECE005A7E22 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		9EEC75741420DECE005A7E22 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -111,6 +113,7 @@
 		9EEC75781420DECE005A7E22 /* InMotion */ = {
 			isa = PBXGroup;
 			children = (
+				9EA9A4201496A9B600A35D84 /* inmotionbg.png */,
 				9E29B1CD14891C640025FE43 /* CoreLocationController.h */,
 				9E29B1CE14891C640025FE43 /* CoreLocationController.m */,
 				9EEC75811420DECE005A7E22 /* InMotionAppDelegate.h */,
@@ -195,6 +198,7 @@
 				08B373B61482A105002C3A85 /* InMotionViewControllerDup in Resources */,
 				08A67D74148562DD0015E63F /* CalibrationViewController.xib in Resources */,
 				9E29B1CB14891BA90025FE43 /* newBD.sqlite in Resources */,
+				9EA9A4211496A9B600A35D84 /* inmotionbg.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
