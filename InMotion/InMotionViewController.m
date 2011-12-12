@@ -272,12 +272,12 @@ double limitMaxBike=1.2;
         
         if (!busOn && !carOn){ 
             if(calcAvg>limitWalkRun && avgSpeed>kRunningMinThreshold){
-                [status setText:@"running"];
+                [status setText:@"Running"];
                 evento=@"runnning";
                 
             }
             else if(calcAvg<=limitWalkRun && calcAvg >= limitWalkStop && avgSpeed<=kWalkingMaxThreshold && avgSpeed>=kWalkingMinThreshold){
-                [status setText:@"walking"];
+                [status setText:@"Walking"];
                 evento=@"walking";
             }   
             
@@ -287,17 +287,17 @@ double limitMaxBike=1.2;
             }
             //else if (calcAvg<=limitBus && avgSpeed>kBusMinThreshold && avgSpeed<kBusMaxThreshold  && busNear){ // && busnearstop (x)
             else if (calcAvg<=limitBus && avgSpeed>kBusMinThreshold && avgSpeed<kBusMaxThreshold  && (ridingOnBus>0.5)){ 
-                [status setText:@"Bus"];
+                [status setText:@"On Bus"];
                 evento=@"bus";
                 busOn=true;
             }
             else if (calcAvg<=limitCar && avgSpeed>kCarMinThreshold && avgSpeed<kCarMaxThreshold){
-                [status setText:@"Car"];
+                [status setText:@"On Car"];
                 evento=@"car";
                 carOn=true;
             }
             else if (calcAvg>limitMinBike && calcAvg<limitMaxBike && avgSpeed>kCyclingMinThreshold && avgSpeed<kCyclingMaxThreshold){
-                [status setText:@"Bike"];
+                [status setText:@"On Bike"];
                 evento=@"bike";
             }
         }
@@ -477,7 +477,6 @@ double limitMaxBike=1.2;
                                                selector:@selector(calculateBusProbability:) 
                                                userInfo:nil 
                                                 repeats:YES];    
-    
 }
 
 -(void)testTimerFired:(NSTimer *) theTimer

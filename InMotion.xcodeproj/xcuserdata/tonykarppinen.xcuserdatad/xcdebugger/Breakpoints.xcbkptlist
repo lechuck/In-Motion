@@ -9,11 +9,11 @@
          continueAfterRunningActions = "No"
          isPathRelative = "1"
          filePath = "InMotion/InMotionViewController.m"
-         timestampString = "345387057.420847"
+         timestampString = "345420598.631295"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "847"
-         endingLineNumber = "847"
+         startingLineNumber = "846"
+         endingLineNumber = "846"
          landmarkName = "-calculateBusProbability:"
          landmarkType = "5">
       </FileBreakpoint>
@@ -37,11 +37,11 @@
          continueAfterRunningActions = "No"
          isPathRelative = "1"
          filePath = "InMotion/InMotionViewController.m"
-         timestampString = "345387057.420847"
+         timestampString = "345420598.631295"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "846"
-         endingLineNumber = "846"
+         startingLineNumber = "845"
+         endingLineNumber = "845"
          landmarkName = "-calculateBusProbability:"
          landmarkType = "5">
       </FileBreakpoint>
