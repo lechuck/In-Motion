@@ -23,22 +23,26 @@
 @synthesize debugLabelMeters;
 @synthesize debugLabelCalled;
 
-
-
 // Location
 @synthesize CLController;
-double              avgspeed;
-NSMutableArray      *avgSpeedArray;
-NSMutableArray      *busStopsArray;
-float               myAverageSpeed = 0;
-NSString            *currentType;
-CLLocation          *oldLocation;
-CLLocation          *currentLocation;
+double              avgspeed;                   // Calculated speed (every 10m) TODO: Refactor with proper name
+NSMutableArray      *avgSpeedArray;             // Data for calculating the average speed
+NSMutableArray      *busStopsArray;             // Local cache of bus stop data from the Reittiopas API
+float               myAverageSpeed = 0;         // Average speed calculated over kSpeedMaxAvgTime sec period
+NSString            *currentType;               // Current type for manual input TODO: Refactor this with estimated value for DB
+CLLocation          *oldLocation;               // Location to be compared with current location for calculating speed
+CLLocation          *currentLocation;           // Current location, updated once a second
+CLLocation          *lastCacheUpdateLocation;   // Location where the cache was built last time
+float               ridingOnBus = 0.49;         // Probability for being on a bus instead of car. 0 = car, 1 = bus
+int                 timeStoppedOnBusStop = 0;   // Time spent on a bus stop
+int                 timeWithoutBusStop = 0;     // Time spent outside bus stops (driving by doesn't count)
 double              distance;
+double const        bustStopBoundingBox = 500;  // Bounding box for Reittiopas API to return the bus stops 
 int const           kMySpeedInterval = 20;      // Get the speed in every kMySpeedInterval seconds
 int const           kSpeedMaxAvgTime = 3 * 60;  // Use no more data than from last 3min for speed average
 int const           kDistancingMax = 3;         // Use no more data than from last 3min for speed average
 float const         kModeUpdateInterval = 10.0; // Mode is updated every kModeUpdateInterval seconds
+float const         kOnBusStopDistance = 40.0;  // Max distance to bus stop where we assume we are on the bus stop in meters
 float const         kIDLEMinThreshold = 0;
 float const         kIDLEMaxThreshold = 1.99;
 float const         kWalkingMinThreshold = 2;
@@ -51,9 +55,10 @@ float const         kBusMinThreshold = 12; // get data
 float const         kBusMaxThreshold = 60;
 float const         kCarMinThreshold = 20;
 float const         kCarMaxThreshold = 130;
-NSDate              *lastUpdatedAt;
+NSDate              *lastUpdatedAt;            
 NSArray             *stopKeys;
 NSTimer             *testTimer;
+NSTimer             *busTimer;
 
 sqlite3 *database;
 
@@ -120,27 +125,19 @@ double limitMaxBike=1.2;
     return avgspeed;
 };
 
-// Returns true if a busstop is in 'meters' bounding box. Safe to call often, calls Reittiopas API only when neccessary. 
+
+// Returns true if a busstop is in 'meters' bounding box from current location. Safe to call often, calls Reittiopas API only when neccessary. 
 - (bool)busStopNearby:(NSInteger) meters {
     NSLog(@"busStopNearbyCalled...");
-    
-    // Check wheter the busStopArray data has gone stale
-    if (myAverageSpeed == 0) {
-        myAverageSpeed = 0.1;
-    }
-    NSTimeInterval sinceLastUpdate = -1* [lastUpdatedAt timeIntervalSinceNow];
-    double avgSpeedInMetersPerSecond = (myAverageSpeed * 1000) / 3600;
-    double updateInterval = avgSpeedInMetersPerSecond * sinceLastUpdate;
-    
-    // Update the data if needed
-    //if ((updateInterval * 1.1) > meters) { 
-    if (true) { 
+        
+    if ([currentLocation distanceFromLocation:lastCacheUpdateLocation] > bustStopBoundingBox) {
+        NSLog(@"bus stop cache rebuild...");        
+        
         NSURL *webServiceURL;
         NSString *urlString = [NSString stringWithFormat:@"http://api.reittiopas.fi/hsl/prod/?request=stops_area&epsg_in=4326&epsg_out=4326&center_coordinate=%f,%f&user=inmotion&pass=in002726&diameter=400", 
                                [currentLocation coordinate].longitude,
                                [currentLocation coordinate].latitude,
                                meters];
-        NSLog(urlString);
         webServiceURL = [NSURL URLWithString:urlString];
         NSError *error = nil;
         NSData *data = [NSData dataWithContentsOfURL:webServiceURL];
@@ -153,37 +150,31 @@ double limitMaxBike=1.2;
                      error:&error];
             
             [self updateReittiopasData:stops];        
-        }            
+        }                           
     }
+       
+    double distanceToNearestStop = DBL_MAX;
     
-    // Debug smallest
-    double closest = 8888888;
-    
-    // Check the distances to all the busstops in busStopsArray
+    // Find the nearest bus stop on cache     
     for (id aStop in busStopsArray) {        
         CLLocation *stopLocation = [[CLLocation alloc] initWithLatitude:
                                     [[aStop objectForKey:@"lat"] doubleValue]
                                                               longitude:[[aStop objectForKey:@"lng"] doubleValue]];
-        // Debug
-        NSLog([NSString stringWithFormat:@"lat: %f AND lng: %f", 
-               [[aStop objectForKey:@"lat"] doubleValue],
-               [[aStop objectForKey:@"lng"] doubleValue]]);
         
-        if (closest > [currentLocation distanceFromLocation:stopLocation]) {
-            closest = [currentLocation distanceFromLocation:stopLocation];
+        if (distanceToNearestStop > [currentLocation distanceFromLocation:stopLocation]) {
+            distanceToNearestStop = [currentLocation distanceFromLocation:stopLocation];
+            [debugLabelMeters setText:[NSString stringWithFormat:@"%f meters.", distanceToNearestStop]];            
         }
+
+        [stopLocation release];        
         
-        if ([currentLocation distanceFromLocation:stopLocation] < meters) {
-            return true; 
+        if (distanceToNearestStop < meters) {
+            return true;
         }
+    }    
+
+    return false;    
         
-        [stopLocation release];
-    }
-    
-    [debugLabelMeters setText:[NSString stringWithFormat:@"%f meters.", closest]];
-    
-    return false;        
-    
 };
 
 // Returns true if a busstop is in 'meters' bounding box. Safe to call often, calls Reittiopas API only when neccessary. 
@@ -294,7 +285,8 @@ double limitMaxBike=1.2;
                 [status setText:@"stopped"];
                 evento=@"stopped";
             }
-            else if (calcAvg<=limitBus && avgSpeed>kBusMinThreshold && avgSpeed<kBusMaxThreshold  && busNear){ // && busnearstop (x)
+            //else if (calcAvg<=limitBus && avgSpeed>kBusMinThreshold && avgSpeed<kBusMaxThreshold  && busNear){ // && busnearstop (x)
+            else if (calcAvg<=limitBus && avgSpeed>kBusMinThreshold && avgSpeed<kBusMaxThreshold  && (ridingOnBus>0.5)){ 
                 [status setText:@"Bus"];
                 evento=@"bus";
                 busOn=true;
@@ -389,7 +381,7 @@ double limitMaxBike=1.2;
             counter++;
             
             if(counter==VECTOR_SIZE){
-                counter=0;
+                 counter=0;
                 current_vector=1;
                 
                 summation = 0.0;
@@ -479,6 +471,12 @@ double limitMaxBike=1.2;
                                             selector:@selector(testTimerFired:) 
                                             userInfo:nil 
                                             repeats:YES];    
+    
+    busTimer = [NSTimer scheduledTimerWithTimeInterval:1.0
+                                                 target:self 
+                                               selector:@selector(calculateBusProbability:) 
+                                               userInfo:nil 
+                                                repeats:YES];    
     
 }
 
@@ -679,6 +677,9 @@ double limitMaxBike=1.2;
     NSDate *now = [NSDate date];
     [debugLabelCalled setText:[NSString stringWithFormat:@"updated: %@", [now description] ]];
     
+    // Mark the location as lastCacheUpdateLocation
+    lastCacheUpdateLocation = [currentLocation copy];
+    
     // If no busStopsArray array, create it 
     if (busStopsArray == NULL) {
         busStopsArray = [[NSMutableArray alloc] init];
@@ -833,6 +834,53 @@ double limitMaxBike=1.2;
 
 - (void)locationError:(NSError *)error {
     // Errors?
+}
+
+
+// Distinguish between a bus and a car, run every second. Updates probability variable ridingOnBus.
+-(void)calculateBusProbability:(NSTimer *) theTimer
+{
+    // TODO: Fix the condition! Accelerometer is not taken into account. Estimate the kBusMinThreshold value.
+    
+    // Calculate only if we are on a bus or a car.     
+    if (myAverageSpeed > kBusMinThreshold) {
+        if ([self busStopNearby:kOnBusStopDistance]) {
+            timeStoppedOnBusStop++;
+            if (timeStoppedOnBusStop > 10) {
+                // More than 10 sec on the stop, increase probability of bus
+                if (timeStoppedOnBusStop>20) {
+                    ridingOnBus = 1;
+                }
+                else {
+                    ridingOnBus = 0.5 + (1 - 0.75+cos((timeStoppedOnBusStop-10)*0.1)*1/4);
+                }
+                
+                timeWithoutBusStop = 0;                
+            }
+            else {
+                timeWithoutBusStop++;
+            }
+        }
+        else {
+            timeStoppedOnBusStop = 0;
+            timeWithoutBusStop++;
+        }
+        
+        // If riding for longer than 3 minutes, start increasing the probability for a car
+        if (timeWithoutBusStop > 3*60) {
+            if (ridingOnBus<0.999) {
+                ridingOnBus = ridingOnBus - 0.001;
+            }
+        }
+        
+    }
+    else {
+        // No longer on a car nor a bus, reset the probability. 
+        ridingOnBus = 0.5;
+        timeWithoutBusStop = 0;
+        timeStoppedOnBusStop = 0;
+    }
+    
 }
 
 - (IBAction)doCalibrate:(id)sender{

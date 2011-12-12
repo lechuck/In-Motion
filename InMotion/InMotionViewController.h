@@ -29,6 +29,7 @@
 // Location stuff
 @property (nonatomic, retain) CoreLocationController *CLController;
 
+
 // Debug stuff
 @property (nonatomic, retain) IBOutlet UILabel *debugLabel;
 @property (nonatomic, retain) IBOutlet UILabel *debugLabelMeters;
@@ -38,6 +39,7 @@
 - (bool)busStopNearby:(NSInteger) meters;
 - (bool)busStopIn:(NSInteger) meters fromLocation:(CLLocation*)searchFromLocation;
 - (void)updateReittiopasData:(NSArray *)stopsArray;
+- (void)calculateBusProbability:(NSTimer *) theTimer;
 
 
 
